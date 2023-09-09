@@ -43,6 +43,30 @@ def split_train_dev_test(X, y, test_size=0.2, dev_size=0.25, random_state=1):
 def predict_and_eval(model, X, y):
     y_pred = model.predict(X)
     accuracy = (y_pred == y).mean()
-    classification_rep = classification_report(y, y_pred)
-    confusion_mat = confusion_matrix(y, y_pred)
-    return accuracy, classification_rep,confusion_mat
+    #classification_rep = classification_report(y, y_pred)
+    #confusion_mat = confusion_matrix(y, y_pred)
+    return accuracy
+
+# Function for Hyper paramater tuning
+def tune_hyperparameters(train_data, train_labels, dev_data, dev_labels, param_combinations):
+    best_params = None
+    best_model = None
+    best_dev_accuracy = 0.0
+
+    for params in param_combinations:
+        # Train a model with the current set of hyperparameters
+        model = train_classifier(train_data, train_labels, params)
+        
+        # Evaluate the model on the training data
+        train_accuracy = predict_and_eval(model, train_data, train_labels)
+        
+        # Evaluate the model on the development data
+        dev_accuracy = predict_and_eval(model, dev_data, dev_labels)
+        
+        # Check if this model's development accuracy is better than the current best
+        if dev_accuracy > best_dev_accuracy:
+            best_params = params
+            best_model = model
+            best_dev_accuracy = dev_accuracy
+    
+    return train_accuracy, best_params, best_model, best_dev_accuracy
