@@ -24,3 +24,9 @@ print("Accuracy on Test Set:", accuracy_test)
 print("Classification Report on Test Set:\n", classification_rep_test)
 print("Confusion Matrix on Test Set:\n", confusion_mat_test)
 
+# Added as part of test 2.1
+print("Length of data set:", len(x))
+# Added as part of test 2.2
+for image in x:
+    height, width = image.shape[0], image.shape[1]
+    print(f"Image Size - Width: {width}, Height: {height}")
