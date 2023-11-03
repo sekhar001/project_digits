@@ -1,0 +1,8 @@
+## creating python image
+FROM python:3.6.9 
+## copying the contents into digits folder
+COPY . /digits
+WORKDIR /digits
+RUN pip install -r requirements.txt
+CMD ["pytest"]
+
