@@ -1,11 +1,55 @@
 # The digits dataset consists of 8x8 pixel images of digits. The images attribute of the dataset stores 8x8 arrays of grayscale values for each image. We will use these arrays to visualize the first 4 images. The target attribute of the dataset stores the digit each image represents and this is included in the title of the 4 plots below.
 
-# Import dataset, classifier and performance metrics from utilities file
-from sklearn import metrics
+##############################################################################################################
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
+import joblib
 from utilities import preprocess, train_classifier, split_dataset,load_digits_dataset,predict_and_eval,split_train_dev_test,tune_hyperparameters
 
-# Data Loading
-x,y = load_digits_dataset()
+# # Define a function for tuning hyperparameters
+# def tune_hyperparameters(X_train, y_train, X_dev, y_dev, param_combinations, model_type):
+#     if model_type == 'svm':
+#         model = SVC()
+#     elif model_type == 'decision_tree':
+#         model = DecisionTreeClassifier()
+    
+#     grid_search = GridSearchCV(model, param_combinations, cv=3, n_jobs=-1, scoring='accuracy')
+#     grid_search.fit(X_train, y_train)
+    
+#     best_hparams = grid_search.best_params_
+#     best_model = grid_search.best_estimator_
+#     best_accuracy = grid_search.best_score_
+    
+#     return grid_search.best_score_, best_hparams, best_model, best_accuracy
+
+# # Define a function to train a classifier
+# def train_classifier(X_train, y_train, best_hparams, model_type):
+#     if model_type == 'svm':
+#         model = SVC(**best_hparams)
+#     elif model_type == 'decision_tree':
+#         model = DecisionTreeClassifier(**best_hparams)
+    
+#     model.fit(X_train, y_train)
+#     return model
+
+# # Define a function to predict and evaluate the model
+# def predict_and_eval(model, X_test, y_test):
+#     y_pred = model.predict(X_test)
+#     accuracy = accuracy_score(y_test, y_pred)
+#     return accuracy
+
+# # Define a function to preprocess the data (you may need to implement this function)
+# def preprocess(data):
+#     num_samples = len(data)
+#     data = data.reshape((num_samples, -1))
+#     return data
+
+x, y = load_digits_dataset()
 
 import itertools
 
@@ -16,45 +60,96 @@ test_size_options = [0.1, 0.2, 0.3]
 # Generate combinations of development and test sizes
 dev_test_combinations = [{'test_size': test, 'dev_size': dev} for test, dev in itertools.product(test_size_options, dev_size_options)]
 
-for dict_size in dev_test_combinations:
-    test_size_options = dict_size['test_size']
-    dev_size_options = dict_size['dev_size']
-    train_size = 1 - (dev_size_options+test_size_options)
+# Define model types
+model_types = ['svm', 'decision_tree']
 
-    # Data splitting into train, test and dev set
-    #X_train, X_test, y_train, y_test = split_dataset(x, y, test_size=0.3);
-    X_train, X_dev, X_test, y_train, y_dev, y_test = split_train_dev_test(x, y, test_size=test_size_options, dev_size=dev_size_options);
+for model_type in model_types:
+    for dict_size in dev_test_combinations:
+        test_size_options = dict_size['test_size']
+        dev_size_options = dict_size['dev_size']
+        train_size = 1 - (dev_size_options + test_size_options)
+        
+        # Data splitting into train, test, and dev set
+        X_train, X_dev, X_test, y_train, y_dev, y_test = split_train_dev_test(x, y, test_size=test_size_options, dev_size=dev_size_options)
+        
+        # Data Preprocessing
+        X_train = preprocess(X_train)
+        X_test = preprocess(X_test)
+        X_dev = preprocess(X_dev)
+        
+        # Defining the list hyper-params for SVM Classifier or Decision Tree Classifier
+        if model_type == 'svm':
+            gamma_range = [0.001, 0.01, 0.1, 1.0, 10]
+            C_range = [0.1, 1.0, 2, 5, 10]
+            #param_combinations = [{'gamma': gamma, 'C': C} for gamma, C in itertools.product(gamma_range, C_range)]
+            param_combinations = [{'gamma': [gamma], 'C': [C]} for gamma, C in itertools.product(gamma_range, C_range)]
+        elif model_type == 'decision_tree':
+            max_depth_range = [None, 10, 20, 30]
+            min_samples_split_range = [2, 5, 10]
+            #param_combinations = [{'max_depth': max_depth, 'min_samples_split': min_samples_split} for max_depth, min_samples_split in itertools.product(max_depth_range, min_samples_split_range)]
+            param_combinations = [{'max_depth': [max_depth], 'min_samples_split': [min_samples_split]} for max_depth, min_samples_split in itertools.product(max_depth_range, min_samples_split_range)]
 
-    # Data Preprocessing
-    X_train = preprocess(X_train)
-    X_test = preprocess(X_test)
-    X_dev = preprocess(X_dev)
+        # Tuning the Hyperparameters
+        train_acc, best_hparams, best_model, best_accuracy = tune_hyperparameters(X_train, y_train, X_dev, y_dev, param_combinations, model_type)
+        
+        # Train the data
+        model = train_classifier(X_train, y_train, best_hparams, model_type)
+        
+        # Predict and evaluate the model on the test subset
+        accuracy_test = predict_and_eval(model, X_test, y_test)
+        
+        # Print best params for each of the 9 combinations
+        print(f'Model Type: {model_type}, test_size={test_size_options}, dev_size={dev_size_options}, train_size={train_size}, train_acc:{train_acc:.2f} dev_acc:{best_accuracy:.2f} test_acc: {accuracy_test:.2f}')
+        print(f' Best params:{best_hparams}')
 
-    # Defining the list hyoer-params for SVM Classifier:
-    gamma_range = [0.001, 0.01, 0.1, 1.0, 10]
-    C_range = [0.1, 1.0, 2, 5, 10]
-    param_combinations = [{'gamma': gamma, 'C': C} for gamma, C in itertools.product(gamma_range, C_range)]
 
-    #Tuning the Hyperparams:
-    train_acc, best_hparams, best_model, best_accuracy = tune_hyperparameters(X_train, y_train, X_dev, y_dev, param_combinations)
+    # After selecting the best model, calculate accuracy and print confusion matrix
+    best_train_pred = best_model.predict(X_test)
+    best_dev_pred = best_model.predict(X_dev)
 
-    # Train the data
-    model = train_classifier(X_train, y_train, {'gamma': 0.001}, model_type='svm')
+    train_accuracy = accuracy_score(y_test, best_train_pred)
+    dev_accuracy = accuracy_score(y_dev, best_dev_pred)
+    
+    print("Final Best model parameters:", best_hparams)
+    print("Training accuracy with best model:", train_accuracy)
+    print("Development accuracy with best model:", dev_accuracy)
+    
+    # Print confusion matrices
+    print("Confusion matrix for training data:")
+    print(confusion_matrix(y_test, best_train_pred))
+    
+    print("Confusion matrix for development data:")
+    print(confusion_matrix(y_dev, best_dev_pred))
 
-    # Predict and evaluation of the model on the test subset
-    accuracy_test = predict_and_eval(model,X_test, y_test)
-    print("Accuracy on Test Set:", accuracy_test)
-    #print("Classification Report on Test Set:\n", classification_rep_test)
-    #print("Confusion Matrix on Test Set:\n", confusion_mat_test)
 
-    #Print best params for each of the 9 combinations
-    print(f'test_size={test_size_options}, dev_size={dev_size_options}, train_size={train_size}, train_acc:{train_acc:.2f} dev_acc:{best_accuracy:.2f} test_acc: {accuracy_test:.2f}')
-    print(f' Best params:{best_hparams}')
+# # Generate a dynamic model filename based on hyperparameters
+# best_model_filename = "./models/{}_".format(model_type) + "_".join(["{}:{}".format(k, v) for k, v in best_hparams.items()]) + ".joblib"
 
-# Added as part of test 2.1
-print("Length of data set:", len(x))
-# Added as part of test 2.2
-for image in x:
-    height, width = image.shape[0], image.shape[1]
-    print(f"Image Size - Width: {width}, Height: {height}")
+# # Save the best model to the generated filename
+# joblib.dump(best_model, best_model_filename)
+# print(f"Best {model_type} model saved as {best_model_filename}")
+
+    # Save the best model to a file
+    # if model_type == 'svm':
+    #     best_model_filename = "best_svm_model.pkl"
+    # elif model_type == 'decision_tree':
+    #     best_model_filename = "best_decision_tree_model.pkl"
+
+    # joblib.dump(best_model, best_model_filename)
+    # print(f"Best {model_type} model saved as {best_model_filename}")
+
+    # Save the best model to a file
+    if model_type == 'svm':
+        best_model_filename = f"best_svm_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+    elif model_type == 'decision_tree':
+        best_model_filename = f"best_decision_tree_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+
+    joblib.dump(best_model, f"model/{best_model_filename}")
+    #print(f"Best {model_type} model saved as {best_model_filename}")
+    
+    # # Save the best model to a file
+    # best_model_filename = f"best_{model_type}_model_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+
+    # joblib.dump(best_model, best_model_filename)
+    # print(f"Best {model_type} model saved as {best_model_filename}")
 
