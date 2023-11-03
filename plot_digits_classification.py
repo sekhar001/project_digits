@@ -144,7 +144,7 @@ for model_type in model_types:
     elif model_type == 'decision_tree':
         best_model_filename = f"best_decision_tree_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
 
-    joblib.dump(best_model, f"model/{best_model_filename}")
+    joblib.dump(best_model, f"models/{best_model_filename}")
     #print(f"Best {model_type} model saved as {best_model_filename}")
     
     # # Save the best model to a file
