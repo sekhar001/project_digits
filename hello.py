@@ -1,35 +1,29 @@
-from flask import Flask,request
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+def compare_arrays(arr1, arr2):
+    if arr1 == arr2:
+        return True
+    else:
+        return False
 
+@app.route('/check_arrays', methods=['POST'])
+def check_arrays():
+    try:
+        data = request.get_json()
 
-# @app.route("/niladri")
-# def hello_world2():
-#     return "<p>Hello, niladri!</p>"
+        if 'array1' in data and 'array2' in data:
+            array1 = data['array1']
+            array2 = data['array2']
 
+            are_arrays_same = compare_arrays(array1, array2)
 
-# @app.route("/user/<user_name>")
-# def user_defined(user_name):
-#     return f"Hello {escape(user_name)}"
+            return jsonify({"are_arrays_same": are_arrays_same})
+        else:
+            return jsonify({"error": "Missing 'array1' or 'array2' in request data."}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/user/<username>')
-def show_user_profile(username):
-    return f'User {username}'
-
-
-@app.route('/sum/<x>/<y>')
-def sum_two_num(x,y):
-    return f'Sum of {x} and {y} = {int(x) + int(y)}'
-
-@app.route('/sum_numbers', methods = ['POST'])
-def sum_num():
-    data = request.get_json( )
-    x = data['x']
-    y = data['y']
-    sum = int(x) + int(y)
-    print(sum)
-    return str(sum)
+# if __name__ == '__main__':
+#     app.run(debug=True)
