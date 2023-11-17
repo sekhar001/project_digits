@@ -1,10 +1,28 @@
 ## creating python image
 FROM python:3.6.9 
-## copying the contents into digits folder
+# ## copying the contents into digits folder
+# COPY . /digits
+# WORKDIR /digits
+#RUN pip install -r requirements.txt
+# #CMD ["pytest"]
+# CMD [ "python", "plot_digits_classification.py" ]
+
+
+# Use an official Python runtime as a parent image
+#FROM python:3.9.17
+
+# copy the whole code 
 COPY . /digits
+# Set the working directory in the container
 WORKDIR /digits
+
+# Install packages specified in requirements.txt
 RUN pip install -r requirements.txt
-#CMD ["pytest"]
-CMD [ "python", "plot_digits_classification.py" ]
 
+# Set the FLASK_APP environment variable
+ENV FLASK_APP=api/hello
 
+EXPOSE 5000
+
+# Run app.py when the container launches
+CMD ["flask", "run", "--host=0.0.0.0"]
