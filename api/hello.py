@@ -73,7 +73,7 @@ import json
 import os
 # print('==>',os.getcwd())
 from flask import Flask, request, jsonify
-from utilities import preprocess
+from ..utilities import preprocess
 import numpy as np
 
 # from markupsafe import escape

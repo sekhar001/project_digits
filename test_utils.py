@@ -1,6 +1,6 @@
 
 from sklearn import datasets
-from hello import app
+from api.hello import app
 import numpy as np
 import requests
 import pytest
