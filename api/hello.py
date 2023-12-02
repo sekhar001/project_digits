@@ -92,17 +92,7 @@ def load_model(model_type):
     image_array = np.array(json.loads(image_array))
     preprocessed_image = preprocess(image_array)
 
-    # Dynamically load the first model in the 'models/' folder
-    model_files = os.listdir('models/')
-    model_files = [file for file in model_files if file.endswith('.pkl')]
-
-    if not model_files:
-        raise FileNotFoundError("No model files found in the 'models/' folder")
-
-    first_model_file = model_files[1] 
-    # first_model_file = '/Users/sanjib/Desktop/IITJ/Classes/Sem-2/ML-Ops/Labs/digit-classifications/models/decision_tree_max_depth:10.joblib'
-    first_model_path = f"models/{first_model_file}"
-    best_model = joblib.load(first_model_path)
+    best_model = get_model_by_type(model_type)
 
     # Use the loaded model for prediction
     predicted_digit = best_model.predict(preprocessed_image.reshape(1, -1))[0]
@@ -114,7 +104,14 @@ def load_model(model_type):
     return jsonify(response)
     #return str(predicted_digit)
 ###############################################################
-
+def get_model_by_type(model_type):
+    
+    if model_type == "svm":
+        return joblib.load(r"./models/M22AIE238_best_svm_model_svm_C:5_gamma:0.01.pkl")
+    elif model_type == "tree":
+        return joblib.load(r"./models/M22AIE238_best_decision_tree_model_decision_tree_max_depth:None_min_samples_split:2.pkl")
+    elif model_type == "lr":
+        return joblib.load(r"./models/M22AIE238_best_logistic_regression_model_logistic_regression_solver_newton-cg.pkl")
 # @app.route('/predict/<model_type>', methods=['POST'])
 # def load_model(model_type):
 
