@@ -1,5 +1,6 @@
 ## creating python image
-FROM python:3.6.9 
+#FROM python:3.6.9 
+FROM dependency_digits:latest
 # ## copying the contents into digits folder
 # COPY . /digits
 # WORKDIR /digits
@@ -17,7 +18,7 @@ COPY . /digits
 WORKDIR /digits
 
 # Install packages specified in requirements.txt
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
 
 # Set the FLASK_APP environment variable
 ENV FLASK_APP=api/hello

@@ -6,9 +6,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 import joblib
+import warnings
 from utilities import preprocess, train_classifier, split_dataset,load_digits_dataset,predict_and_eval,split_train_dev_test,tune_hyperparameters
 
 # # Define a function for tuning hyperparameters
@@ -61,7 +63,7 @@ test_size_options = [0.1, 0.2, 0.3]
 dev_test_combinations = [{'test_size': test, 'dev_size': dev} for test, dev in itertools.product(test_size_options, dev_size_options)]
 
 # Define model types
-model_types = ['svm', 'decision_tree']
+model_types = ['svm', 'decision_tree','logistic_regression']
 
 for model_type in model_types:
     for dict_size in dev_test_combinations:
@@ -77,8 +79,11 @@ for model_type in model_types:
         X_test = preprocess(X_test)
         X_dev = preprocess(X_dev)
         
-        # Defining the list hyper-params for SVM Classifier or Decision Tree Classifier
-        if model_type == 'svm':
+        # Defining the list hyper-params for Logistic regression, SVM Classifier or Decision Tree Classifier
+        if model_type == 'logistic_regression':
+            solver_options = ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'] ## Applying hyperparameter solver for Q2.
+            param_combinations = [{'solver': [solver]} for solver in solver_options]
+        elif model_type == 'svm':
             gamma_range = [0.001, 0.01, 0.1, 1.0, 10]
             C_range = [0.1, 1.0, 2, 5, 10]
             #param_combinations = [{'gamma': gamma, 'C': C} for gamma, C in itertools.product(gamma_range, C_range)]
@@ -140,9 +145,12 @@ for model_type in model_types:
 
     # Save the best model to a file
     if model_type == 'svm':
-        best_model_filename = f"best_svm_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+        best_model_filename = f"M22AIE238_best_svm_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
     elif model_type == 'decision_tree':
-        best_model_filename = f"best_decision_tree_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+        best_model_filename = f"M22AIE238_best_decision_tree_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+    elif model_type == 'logistic_regression':
+            best_model_filename = f"M22AIE238_best_logistic_regression_model_{model_type}_{'_'.join([f'{k}:{v}' for k, v in best_hparams.items()])}.pkl"
+
 
     joblib.dump(best_model, f"models/{best_model_filename}")
     #print(f"Best {model_type} model saved as {best_model_filename}")
