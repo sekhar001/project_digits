@@ -94,7 +94,7 @@ def tune_hyperparameters(X_train, y_train, X_dev, y_dev, param_combinations, mod
 # Define a function to train a classifier
 def train_classifier(X_train, y_train, best_hparams, model_type):
     if model_type == 'logistic_regression':
-        model = LogisticRegression()
+        model = LogisticRegression(**best_hparams)
     elif model_type == 'svm':
         model = SVC(**best_hparams)
     elif model_type == 'decision_tree':
